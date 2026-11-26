@@ -27,9 +27,8 @@ dan **kenapa** hasilnya begitu — dengan data dan bukti, bukan sekadar tebakan.
   tersimpan di cloud, jadi tidak hilang kalau aplikasi dihapus / ganti HP.
   (Sebelumnya memakai SQLite lokal — sudah diganti penuh ke Supabase.)
 - **Riwayat & dokumen** — tiap hasil bisa disimpan, dibuka lagi lengkap
-  dengan bukti per plat, dihapus, dan dicari. Hasil juga bisa dibagikan
-  atau diunduh/dicetak sebagai **PDF rapi** berisi nama, umur, serta
-  tanggal & waktu tes.
+  dengan bukti per plat, dihapus, dan dicari. Hasil juga bisa diunduh
+  sebagai **PDF rapi** berisi nama, umur, serta tanggal & waktu tes.
 
 ## Jenis hasil yang dikenali
 
@@ -167,6 +166,7 @@ src/
     forwardChaining.js          # mesin forward chaining + CF (murni JS)
     explain.js                  # penjelasan per plat
     pdfHasil.js                 # HTML hasil untuk PDF (expo-print)
+    pdfFile.js                  # unduh PDF: jsPDF di web, dialog cetak sistem di HP
   db/
     supabaseClient.js           # createClient dari .env + isSupabaseConfigured()
     database.js                 # API Supabase: seed, CRUD master, riwayat
@@ -219,6 +219,25 @@ git push
 repo ini harus membuat project Supabase sendiri dan mengisi `.env`-nya
 sendiri mengikuti panduan di atas — basis pengetahuannya sama karena
 seed-nya ikut ter-push.
+
+## Deploy web ke Cloudflare Pages (link .pages.dev)
+
+Setelah repo ter-push ke GitHub, deploy versi web-nya ke Cloudflare Pages
+supaya dapat link berakhiran `.pages.dev`:
+
+1. Buka Cloudflare Dashboard → **Workers & Pages** → **Create** → **Pages**
+   → hubungkan repo GitHub ini.
+2. Isi build settings:
+   - Build command: `npm run build`
+   - Build output directory: `dist`
+3. Di **Environment variables**, isi dari `.env` lokal kamu:
+   - `EXPO_PUBLIC_SUPABASE_URL`
+   - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
+4. Klik **Save and Deploy**. Hasilnya bisa dibuka di
+   `https://NAMA-PROJECT.pages.dev`.
+
+File `.env` tetap tidak ikut ter-push; nilai environment variable diisi
+langsung di dashboard Cloudflare.
 
 ## Hasil verifikasi (2026-11-25)
 

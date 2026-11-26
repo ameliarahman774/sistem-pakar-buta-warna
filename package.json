@@ -29,7 +29,8 @@
     "start": "expo start",
     "test-engine": "node scripts/test-engine.js",
     "web": "expo start --web",
-    "seed": "node supabase/seed.js"
+    "seed": "node supabase/seed.js",
+    "build": "expo export --platform web"
   },
   "version": "1.0.0"
 }
