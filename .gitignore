@@ -1,0 +1,30 @@
+# Expo / React Native
+node_modules/
+.expo/
+dist/
+web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Native
+*.orig
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database lama (SQLite) sudah tidak dipakai — sekarang Supabase.
+# Sisa aturan ini hanya jaga-jaga supaya file .db tidak ikut ter-push.
+*.db
+*.db-journal
+*.sqlite
+*.sqlite-journal
+
+# Env / secrets
+.env
+.env.*
+!.env.example
