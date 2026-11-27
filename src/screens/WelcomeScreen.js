@@ -68,14 +68,14 @@ export default function WelcomeScreen({ go }) {
   // Landscape memakai frame versi lebar (1920x960) yang memenuhi layar
   // tanpa gepeng dan tanpa ada bagian yang kepotong; ukuran elemen
   // diskalakan dari tinggi layar mengikuti mockup Desktop.
-  const s = portrait ? Math.min(width / 414, height / 736) : height / 1024;
-  const lebarKanvas = portrait ? 414 * s : width;
-  const tinggiKanvas = portrait ? 736 * s : height;
+  const s = portrait ? height / 736 : height / 1024;
+  const lebarKanvas = width;
+  const tinggiKanvas = height;
 
   // Teks & bintang desktop diskalakan dari lebar layar supaya rentang
   // dan posisinya sama seperti mockup Desktop 1440x1024.
   const sx = width / 1440;
-  const ukuranJudul = portrait ? 34 * s : 64 * sx;
+  const ukuranJudul = portrait ? 20 * s : 64 * sx;
   const ukuranLanjut = portrait ? 15 * s : 26 * sx;
 
   useEffect(() => {
@@ -118,41 +118,45 @@ export default function WelcomeScreen({ go }) {
       <Pressable style={styles.layar} onPress={() => setTahap(1)} accessibilityLabel="Ketuk untuk lanjut">
         {kanvas(
           <>
-            <ExpoImage source={portrait ? require('../../assets/welcome-stage-awal.png') : require('../../assets/welcome-stage-awal-wide.png')} style={gayaFrame} contentFit="cover" />
+            {portrait ? (
+              <ExpoImage source={require('../../assets/karakter-awal.png')} style={{ position: 'absolute', left: '-45%', bottom: 0, height: '48%', aspectRatio: 2022 / 2151 }} contentFit="contain" />
+            ) : (
+              <ExpoImage source={require('../../assets/welcome-stage-awal-wide.png')} style={gayaFrame} contentFit="cover" />
+            )}
             <Melayang
-              style={[styles.stiker, portrait ? { left: '28%', top: '12%', width: 92 * s } : { left: '32%', top: '32%', width: 160 * sx }]}
+              style={[styles.stiker, portrait ? { left: '12%', top: '27%', width: 65 * s } : { left: '32%', top: '32%', width: 160 * sx }]}
               delay={0}
               durasi={2100}
             >
               <ExpoImage source={require('../../assets/chibi-tanya.webp')} style={[styles.stikerGambar, portrait ? null : { transform: [{ rotate: '-8deg' }] }]} contentFit="contain" />
             </Melayang>
             <Melayang
-              style={[styles.stiker, portrait ? { right: '3%', bottom: '4%', width: 92 * s } : { left: '82%', top: '65%', width:190 * sx }]}
+              style={[styles.stiker, portrait ? { left: '82%', top: '86%', width: 64 * s } : { left: '82%', top: '65%', width:190 * sx }]}
               delay={600}
               durasi={2400}
             >
               <ExpoImage source={require('../../assets/chibi-kotak.png')} style={styles.stikerGambar} contentFit="contain" />
             </Melayang>
             <Bintang
-              style={{ position: 'absolute', ...(portrait ? { right: '6%', top: '17%' } : { left: '81.9%', top: '36%' }) }}
+              style={{ position: 'absolute', ...(portrait ? { left: '84%', top: '22%' } : { left: '81.9%', top: '36%' }) }}
               lebar={portrait ? 42 * s : 86 * s}
-              tinggi={portrait ? 61 * s : 144 * s}
+              tinggi={portrait ? 79 * s : 144 * s}
               rotasi={0}
               delay={800}
               durasi={2200}
             />
             <Bintang
-              style={{ position: 'absolute', ...(portrait ? { left: '48%', top: '54%' } : { left: '35%', top: '61%' }) }}
-              lebar={portrait ? 26 * s : 74 * s}
-              tinggi={portrait ? 38 * s : 150 * s}
-              rotasi={portrait ? 0 : 50}
+              style={{ position: 'absolute', ...(portrait ? { left: '12%', top: '42%' } : { left: '35%', top: '61%' }) }}
+              lebar={portrait ? 24 * s : 74 * s}
+              tinggi={portrait ? 32 * s : 150 * s}
+              rotasi={portrait ? 35 : 50}
               delay={300}
               durasi={1900}
             />
-            <View style={[styles.blokTeks, portrait ? { left: '51%', right: '3%', top: '29%', alignItems: 'flex-start' } : { left: '33%', right: '11%', top: '50.3%' }]}>
-              <Text style={[styles.judul, { fontSize: ukuranJudul, textAlign: portrait ? 'left': 'center' }]}>Apakah kamu buta warna??</Text>
+            <View style={[styles.blokTeks, portrait ? { left: '4%', right: '4%', top: '36%' } : { left: '33%', right: '11%', top: '50.3%' }]}>
+              <Text style={[styles.judul, { fontSize: ukuranJudul, textAlign: 'center' }]}>Apakah kamu buta warna??</Text>
               <Animated.Text
-                style={[styles.lanjut, { fontSize: ukuranLanjut, opacity: redupLanjut, textAlign: portrait ? 'left' : 'center', marginTop: portrait ? 26 * s : 24 * s }]}
+                style={[styles.lanjut, { fontSize: ukuranLanjut, opacity: redupLanjut, textAlign: 'center', marginTop: portrait ? 10 * s : 24 * s }]}
               >
                 Click anywhere to continue
               </Animated.Text>
@@ -165,33 +169,37 @@ export default function WelcomeScreen({ go }) {
 
   return (
     <View style={styles.layar}>
-      <Pressable style={styles.tombolKembali} onPress={() => setTahap(0)} accessibilityLabel="Kembali">
+      <Pressable style={[styles.tombolKembali, portrait ? { top: 52 } : null]} onPress={() => setTahap(0)} accessibilityLabel="Kembali">
         <Text style={styles.tombolKembaliTeks}>← Kembali</Text>
       </Pressable>
       {kanvas(
         <>
-          <ExpoImage source={portrait ? require('../../assets/welcome-stage-tes.png') : require('../../assets/welcome-stage-tes-wide.png')} style={gayaFrame} contentFit="cover" />
+          {portrait ? (
+            <ExpoImage source={require('../../assets/karakter-tes.png')} style={{ position: 'absolute', left: '-48%', bottom: 0, height: '50%', aspectRatio: 2084 / 2279 }} contentFit="contain" />
+          ) : (
+            <ExpoImage source={require('../../assets/welcome-stage-tes-wide.png')} style={gayaFrame} contentFit="cover" />
+          )}
           <Bintang
-            style={{ position: 'absolute', ...(portrait ? { left: '45%', top: '40%' } : { left: '38%', top: '35.6%' }) }}
-            lebar={portrait ? 34 * s : 170 * sx}
-            tinggi={portrait ? 49 * s : 200 * s}
-            rotasi={portrait ? 0 : 50}
+            style={{ position: 'absolute', ...(portrait ? { left: '6%', top: '32%' } : { left: '38%', top: '35.6%' }) }}
+            lebar={portrait ? 30 * s : 170 * sx}
+            tinggi={portrait ? 50 * s : 200 * s}
+            rotasi={portrait ? 35 : 50}
             delay={0}
             durasi={1800}
           />
           <Bintang
-            style={{ position: 'absolute', ...(portrait ? { right: '7%', top: '60%' } : { left: '71%', top: '60%' }) }}
-            lebar={portrait ? 26 * s : 130 * sx}
-            tinggi={portrait ? 38 * s : 150 * s}
+            style={{ position: 'absolute', ...(portrait ? { left: '40%', top: '43%' } : { left: '71%', top: '60%' }) }}
+            lebar={portrait ? 20 * s : 130 * sx}
+            tinggi={portrait ? 32 * s : 150 * s}
             rotasi={0}
             delay={500}
             durasi={2100}
           />
-          <View style={[styles.blokTeks, portrait ? { left: '50%', right: '4%', top: '41%', alignItems: 'flex-start' } : { left: '41%', right: '23%', top: '50.3%' }]}>
-            <Text style={[styles.judul, { fontSize: ukuranJudul, textAlign: portrait ? 'left' : 'center' }]}>Mari kita tes!!!</Text>
+          <View style={[styles.blokTeks, portrait ? { left: '4%', right: '4%', top: '36%' } : { left: '41%', right: '23%', top: '50.3%' }]}>
+            <Text style={[styles.judul, { fontSize: ukuranJudul, textAlign: 'center' }]}>Mari kita tes!!!</Text>
           </View>
           <Melayang
-            style={[styles.stiker, portrait ? { right: '5%', top: '46%', width: 95 * s } : { left: '73%', top: '35%', width: 230 * sx }]}
+            style={[styles.stiker, portrait ? { left: '60%', top: '62%', width: 100 * s } : { left: '73%', top: '35%', width: 230 * sx }]}
             delay={200}
             durasi={2000}
           >
@@ -200,7 +208,7 @@ export default function WelcomeScreen({ go }) {
             </Pressable>
           </Melayang>
           <Melayang
-            style={[styles.stiker, portrait ? { left: '57%', bottom: '6%', width: 95 * s } : { left: '28%', top: '16.5%', width: 129 * sx }]}
+            style={[styles.stiker, portrait ? { left: '36%', top: '27%', width: 66 * s } : { left: '28%', top: '16.5%', width: 129 * sx }]}
             delay={700}
             durasi={2300}
           >
