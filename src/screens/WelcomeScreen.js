@@ -60,10 +60,12 @@ export default function WelcomeScreen({ go }) {
   const pop = useRef(new Animated.Value(0)).current;
   const denyut = useRef(new Animated.Value(0)).current;
 
-  // Panggung rasio 4:3 sebesar mungkin tanpa terpotong.
-  const lebarPanggung = Math.min(width, (height * 4) / 3);
-  const tinggiPanggung = (lebarPanggung * 3) / 4;
-  const skala = lebarPanggung / 1440; // mockup 1440x1024
+  // Layar lebar (web desktop): panggung memenuhi layar.
+  // Layar sempit/HP: panggung rasio 4:3 pas di tengah tanpa terpotong.
+  const layarLebar = width >= 900 && width > height;
+  const lebarPanggung = layarLebar ? width : Math.min(width, (height * 4) / 3);
+  const tinggiPanggung = layarLebar ? height : (lebarPanggung * 3) / 4;
+  const skala = Math.min(lebarPanggung / 1440, tinggiPanggung / 1024); // mockup 1440x1024
 
   useEffect(() => {
     pop.setValue(0);
@@ -85,15 +87,15 @@ export default function WelcomeScreen({ go }) {
   const gayaPop = { opacity: pop, transform: [{ scale: skalaPop }] };
   const redupLanjut = denyut.interpolate({ inputRange: [0, 1], outputRange: [0.45, 1] });
 
-  const ukuranJudul = Math.max(20, 64 * skala);
-  const ukuranLanjut = Math.max(12, 26 * skala);
+  const ukuranJudul = Math.max(16, 64 * skala);
+  const ukuranLanjut = Math.max(11, 26 * skala);
 
   if (tahap === 0) {
     return (
       <Pressable style={styles.layar} onPress={() => setTahap(1)} accessibilityLabel="Ketuk untuk lanjut">
         <Animated.View style={[styles.panggung, { width: lebarPanggung, height: tinggiPanggung }, gayaPop]}>
           <ExpoImage source={require('../../assets/welcome-stage-awal.png')} style={styles.frame} contentFit="cover" />
-          <Melayang style={[styles.stiker, { left: '23%', top: '11%', width: '19%' }]} delay={0} durasi={2100}>
+          <Melayang style={[styles.stiker, { left: '23%', top: layarLebar ? '15%' : '11%', width: '19%' }]} delay={0} durasi={2100}>
             <ExpoImage source={require('../../assets/chibi-tanya.webp')} style={styles.stikerGambar} contentFit="contain" />
           </Melayang>
           <Melayang style={[styles.stiker, { right: '4%', bottom: '7%', width: '17%' }]} delay={600} durasi={2400}>
@@ -122,12 +124,12 @@ export default function WelcomeScreen({ go }) {
         <View style={[styles.blokTeks, { left: '40%', right: '24%', top: '50%' }]}>
           <Text style={[styles.judul, { fontSize: ukuranJudul }]}>Mari kita tes!!!</Text>
         </View>
-        <Melayang style={[styles.stiker, { right: '5%', top: '40%', width: '18%' }]} delay={200} durasi={2000}>
-          <Pressable onPress={() => go('loading')} accessibilityLabel="Mulai tes">
+        <Melayang style={[styles.stiker, { right: '5%', top: layarLebar ? '37%' : '40%', width: '18%' }]} delay={200} durasi={2000}>
+          <Pressable style={styles.tombolGambar} onPress={() => go('loading')} accessibilityLabel="Mulai tes">
             <ExpoImage source={require('../../assets/chibi-tunjuk.webp')} style={styles.stikerGambar} contentFit="contain" />
           </Pressable>
         </Melayang>
-        <Melayang style={[styles.stiker, { left: '40%', bottom: '1%', width: '17%' }]} delay={700} durasi={2300}>
+        <Melayang style={[styles.stiker, { left: '40%', bottom: layarLebar ? '3%' : '1%', width: '17%' }]} delay={700} durasi={2300}>
           <ExpoImage source={require('../../assets/chibi-biru.webp')} style={styles.stikerGambar} contentFit="contain" />
         </Melayang>
       </Animated.View>
@@ -141,6 +143,7 @@ const styles = StyleSheet.create({
   frame: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 },
   stiker: { position: 'absolute', aspectRatio: 1 },
   stikerGambar: { width: '100%', height: '100%' },
+  tombolGambar: { width: '100%', height: '100%' },
   blokTeks: { position: 'absolute', alignItems: 'center' },
   judul: { fontFamily: SERIF, color: MERAH_TEKS, textAlign: 'center' },
   lanjut: { fontFamily: SERIF, color: '#111', textAlign: 'center', marginTop: 10 },
