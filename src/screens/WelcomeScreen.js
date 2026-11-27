@@ -7,8 +7,10 @@ import { Image as ExpoImage } from 'expo-image';
 //          "Click anywhere to continue" (seluruh layar bisa diketuk).
 // Tahap 1: frame karakter mempersilakan + "Mari kita tes!!!" — masuk ke
 //          tes dengan mengetuk gambar chibi penunjuk di sebelah teksnya.
-// Komposisi mockup (rasio 4:3) dipertahankan di semua ukuran layar:
-// panggung diskalakan memenuhi layar tanpa memotong karakter/teks.
+// Background selalu memenuhi layar (zoom to fit): di layar lebar frame
+// menutupi seluruh layar, di HP portrait frame diskalakan setinggi layar
+// dan ditambatkan ke kiri supaya karakter tetap terlihat, teksnya
+// menumpuk di sisi kanan seperti contoh portrait dari Lilin.
 // Semua stiker dan bintang melayang naik-turun pelan.
 
 const SERIF = Platform.OS === 'web' ? 'Georgia, "Times New Roman", serif' : 'serif';
@@ -60,12 +62,10 @@ export default function WelcomeScreen({ go }) {
   const pop = useRef(new Animated.Value(0)).current;
   const denyut = useRef(new Animated.Value(0)).current;
 
-  // Layar lebar (web desktop): panggung memenuhi layar.
-  // Layar sempit/HP: panggung rasio 4:3 pas di tengah tanpa terpotong.
-  const layarLebar = width >= 900 && width > height;
-  const lebarPanggung = layarLebar ? width : Math.min(width, (height * 4) / 3);
-  const tinggiPanggung = layarLebar ? height : (lebarPanggung * 3) / 4;
-  const skala = Math.min(lebarPanggung / 1440, tinggiPanggung / 1024); // mockup 1440x1024
+  const portrait = height > width;
+  const skala = Math.min(width / 1440, height / 1024); // mockup 1440x1024
+  const ukuranJudul = portrait ? Math.max(26, width * 0.085) : Math.max(16, 64 * skala);
+  const ukuranLanjut = portrait ? Math.max(14, width * 0.04) : Math.max(11, 26 * skala);
 
   useEffect(() => {
     pop.setValue(0);
@@ -87,25 +87,52 @@ export default function WelcomeScreen({ go }) {
   const gayaPop = { opacity: pop, transform: [{ scale: skalaPop }] };
   const redupLanjut = denyut.interpolate({ inputRange: [0, 1], outputRange: [0.45, 1] });
 
-  const ukuranJudul = Math.max(16, 64 * skala);
-  const ukuranLanjut = Math.max(11, 26 * skala);
+  // Portrait: frame setinggi layar, lebar mengikuti rasio 4:3, digeser
+  // sedikit ke kiri supaya wajah karakter di tepi kiri seperti mockup HP.
+  // Landscape: frame memenuhi layar penuh (fill) tanpa gap putih.
+  const gayaFrame = portrait
+    ? { position: 'absolute', left: -width * 0.28, top: 0, width: (height * 4) / 3, height }
+    : styles.frame;
+  const isiFrame = portrait ? 'cover' : 'fill';
 
   if (tahap === 0) {
     return (
       <Pressable style={styles.layar} onPress={() => setTahap(1)} accessibilityLabel="Ketuk untuk lanjut">
-        <Animated.View style={[styles.panggung, { width: lebarPanggung, height: tinggiPanggung }, gayaPop]}>
-          <ExpoImage source={require('../../assets/welcome-stage-awal.png')} style={styles.frame} contentFit="cover" />
-          <Melayang style={[styles.stiker, { left: '23%', top: layarLebar ? '15%' : '11%', width: '19%' }]} delay={0} durasi={2100}>
+        <Animated.View style={[styles.panggung, gayaPop]}>
+          <ExpoImage source={require('../../assets/welcome-stage-awal.png')} style={gayaFrame} contentFit={isiFrame} />
+          <Melayang
+            style={[styles.stiker, portrait ? { left: '28%', top: '12%', width: '22%' } : { left: '24%', top: '13%', width: '16%' }]}
+            delay={0}
+            durasi={2100}
+          >
             <ExpoImage source={require('../../assets/chibi-tanya.webp')} style={styles.stikerGambar} contentFit="contain" />
           </Melayang>
-          <Melayang style={[styles.stiker, { right: '4%', bottom: '7%', width: '17%' }]} delay={600} durasi={2400}>
+          <Melayang
+            style={[styles.stiker, portrait ? { right: '3%', bottom: '4%', width: '22%' } : { right: '7%', bottom: '8%', width: '17%' }]}
+            delay={600}
+            durasi={2400}
+          >
             <ExpoImage source={require('../../assets/chibi-kotak.png')} style={styles.stikerGambar} contentFit="contain" />
           </Melayang>
-          <Bintang style={{ position: 'absolute', left: '41%', bottom: '22%' }} ukuran={Math.max(18, 70 * skala)} delay={300} durasi={1900} />
-          <Bintang style={{ position: 'absolute', right: '11%', top: '40%' }} ukuran={Math.max(16, 60 * skala)} delay={800} durasi={2200} />
-          <View style={[styles.blokTeks, { left: '38%', right: '3%', top: '47%' }]}>
-            <Text style={[styles.judul, { fontSize: ukuranJudul }]}>Apakah kamu buta warna??</Text>
-            <Animated.Text style={[styles.lanjut, { fontSize: ukuranLanjut, opacity: redupLanjut }]}>Click anywhere to continue</Animated.Text>
+          <Bintang
+            style={{ position: 'absolute', ...(portrait ? { right: '7%', top: '17%' } : { right: '11%', top: '40%' }) }}
+            ukuran={portrait ? Math.max(26, width * 0.1) : Math.max(16, 60 * skala)}
+            delay={800}
+            durasi={2200}
+          />
+          <Bintang
+            style={{ position: 'absolute', ...(portrait ? { left: '49%', top: '54%' } : { left: '41%', bottom: '22%' }) }}
+            ukuran={portrait ? Math.max(18, width * 0.07) : Math.max(18, 70 * skala)}
+            delay={300}
+            durasi={1900}
+          />
+          <View style={[styles.blokTeks, portrait ? { left: '51%', right: '3%', top: '29%', alignItems: 'flex-start' } : { left: '40%', right: '2%', top: '49%' }]}>
+            <Text style={[styles.judul, { fontSize: ukuranJudul, textAlign: portrait ? 'left' : 'center' }]}>Apakah kamu buta warna??</Text>
+            <Animated.Text
+              style={[styles.lanjut, { fontSize: ukuranLanjut, opacity: redupLanjut, textAlign: portrait ? 'left' : 'center', marginTop: portrait ? 28 : 10 }]}
+            >
+              Click anywhere to continue
+            </Animated.Text>
           </View>
         </Animated.View>
       </Pressable>
@@ -114,22 +141,40 @@ export default function WelcomeScreen({ go }) {
 
   return (
     <View style={styles.layar}>
-      <Animated.View style={[styles.panggung, { width: lebarPanggung, height: tinggiPanggung }, gayaPop]}>
-        <ExpoImage source={require('../../assets/welcome-stage-tes.png')} style={styles.frame} contentFit="cover" />
+      <Animated.View style={[styles.panggung, gayaPop]}>
+        <ExpoImage source={require('../../assets/welcome-stage-tes.png')} style={gayaFrame} contentFit={isiFrame} />
         <Pressable style={styles.tombolKembali} onPress={() => setTahap(0)} accessibilityLabel="Kembali">
           <Text style={[styles.tombolKembaliTeks, { fontSize: Math.max(11, 22 * skala) }]}>← Kembali</Text>
         </Pressable>
-        <Bintang style={{ position: 'absolute', left: '50%', top: '38%' }} ukuran={Math.max(20, 80 * skala)} delay={0} durasi={1800} />
-        <Bintang style={{ position: 'absolute', right: '13%', bottom: '24%' }} ukuran={Math.max(16, 60 * skala)} delay={500} durasi={2100} />
-        <View style={[styles.blokTeks, { left: '40%', right: '24%', top: '50%' }]}>
-          <Text style={[styles.judul, { fontSize: ukuranJudul }]}>Mari kita tes!!!</Text>
+        <Bintang
+          style={{ position: 'absolute', ...(portrait ? { left: '46%', top: '40%' } : { left: '50%', top: '36%' }) }}
+          ukuran={portrait ? Math.max(24, width * 0.09) : Math.max(20, 80 * skala)}
+          delay={0}
+          durasi={1800}
+        />
+        <Bintang
+          style={{ position: 'absolute', ...(portrait ? { right: '7%', top: '60%' } : { right: '18%', bottom: '26%' }) }}
+          ukuran={portrait ? Math.max(18, width * 0.07) : Math.max(16, 60 * skala)}
+          delay={500}
+          durasi={2100}
+        />
+        <View style={[styles.blokTeks, portrait ? { left: '50%', right: '4%', top: '41%', alignItems: 'flex-start' } : { left: '44%', right: '22%', top: '49%' }]}>
+          <Text style={[styles.judul, { fontSize: ukuranJudul, textAlign: portrait ? 'left' : 'center' }]}>Mari kita tes!!!</Text>
         </View>
-        <Melayang style={[styles.stiker, { right: '5%', top: layarLebar ? '37%' : '40%', width: '18%' }]} delay={200} durasi={2000}>
+        <Melayang
+          style={[styles.stiker, portrait ? { right: '5%', top: '46%', width: '23%' } : { right: '7%', top: '42%', width: '14%' }]}
+          delay={200}
+          durasi={2000}
+        >
           <Pressable style={styles.tombolGambar} onPress={() => go('loading')} accessibilityLabel="Mulai tes">
             <ExpoImage source={require('../../assets/chibi-tunjuk.webp')} style={styles.stikerGambar} contentFit="contain" />
           </Pressable>
         </Melayang>
-        <Melayang style={[styles.stiker, { left: '40%', bottom: layarLebar ? '3%' : '1%', width: '17%' }]} delay={700} durasi={2300}>
+        <Melayang
+          style={[styles.stiker, portrait ? { left: '57%', bottom: '6%', width: '22%' } : { left: '41%', bottom: '5%', width: '13%' }]}
+          delay={700}
+          durasi={2300}
+        >
           <ExpoImage source={require('../../assets/chibi-biru.webp')} style={styles.stikerGambar} contentFit="contain" />
         </Melayang>
       </Animated.View>
@@ -138,15 +183,15 @@ export default function WelcomeScreen({ go }) {
 }
 
 const styles = StyleSheet.create({
-  layar: { flex: 1, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
-  panggung: { position: 'relative', backgroundColor: '#fff', overflow: 'hidden' },
+  layar: { flex: 1, backgroundColor: '#fff' },
+  panggung: { flex: 1, position: 'relative', backgroundColor: '#fff', overflow: 'hidden' },
   frame: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 },
   stiker: { position: 'absolute', aspectRatio: 1 },
   stikerGambar: { width: '100%', height: '100%' },
   tombolGambar: { width: '100%', height: '100%' },
   blokTeks: { position: 'absolute', alignItems: 'center' },
-  judul: { fontFamily: SERIF, color: MERAH_TEKS, textAlign: 'center' },
-  lanjut: { fontFamily: SERIF, color: '#111', textAlign: 'center', marginTop: 10 },
+  judul: { fontFamily: SERIF, color: MERAH_TEKS },
+  lanjut: { fontFamily: SERIF, color: '#111' },
   tombolKembali: { position: 'absolute', top: '2%', right: '2%', zIndex: 2, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.85)' },
   tombolKembaliTeks: { color: '#1a73e8', fontWeight: 'bold' },
 });
