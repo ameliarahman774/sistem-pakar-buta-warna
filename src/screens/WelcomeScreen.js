@@ -1,17 +1,36 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Image, TouchableOpacity, Pressable, StyleSheet, Animated, Platform } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Animated, Platform, useWindowDimensions } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 
-// Layar awal 2 tahap sesuai mockup:
-// Tahap 0: "Apakah anda buta warna?" + "Click anywhere to continue"
-//          (seluruh layar bisa diketuk untuk lanjut).
-// Tahap 1: "Ayo tes bersama!" + tombol Start + karakter pinwheel (GIF).
-// Semua konten rata tengah di dalam container selebar HP (maxWidth 480)
-// yang terpusat di layar, supaya di web tidak menyebar ke tepi-tepi.
-// Animasi simpel: konten nge-pop up (scale + fade) tiap tahap muncul,
-// bintang-bintang di sekitarnya melayang naik-turun sambil berputar pelan.
+// Layar awal 2 tahap sesuai mockup panggung:
+// Tahap 0: frame karakter kaget + "Apakah kamu buta warna??" +
+//          "Click anywhere to continue" (seluruh layar bisa diketuk).
+// Tahap 1: frame karakter mempersilakan + "Mari kita tes!!!" — masuk ke
+//          tes dengan mengetuk gambar chibi penunjuk di sebelah teksnya.
+// Komposisi mockup (rasio 4:3) dipertahankan di semua ukuran layar:
+// panggung diskalakan memenuhi layar tanpa memotong karakter/teks.
+// Semua stiker dan bintang melayang naik-turun pelan.
 
-function BintangMelayang({ style, ukuran = 40, delay = 0, durasi = 1800 }) {
+const SERIF = Platform.OS === 'web' ? 'Georgia, "Times New Roman", serif' : 'serif';
+const MERAH_TEKS = '#b03a2e';
+
+function Melayang({ style, delay = 0, durasi = 2000, jarak = 10, children }) {
+  const nilai = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const animasi = Animated.loop(
+      Animated.sequence([
+        Animated.timing(nilai, { toValue: 1, duration: durasi, delay, useNativeDriver: Platform.OS !== 'web' }),
+        Animated.timing(nilai, { toValue: 0, duration: durasi, useNativeDriver: Platform.OS !== 'web' }),
+      ])
+    );
+    animasi.start();
+    return () => animasi.stop();
+  }, [nilai, delay, durasi]);
+  const geserY = nilai.interpolate({ inputRange: [0, 1], outputRange: [0, -jarak] });
+  return <Animated.View style={[style, { transform: [{ translateY: geserY }] }]}>{children}</Animated.View>;
+}
+
+function Bintang({ style, ukuran, delay = 0, durasi = 1800 }) {
   const nilai = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     const animasi = Animated.loop(
@@ -30,19 +49,21 @@ function BintangMelayang({ style, ukuran = 40, delay = 0, durasi = 1800 }) {
     <Animated.Image
       source={require('../../assets/star.png')}
       resizeMode="contain"
-      style={[
-        styles.bintang,
-        style,
-        { width: ukuran, height: ukuran * 1.7, opacity: redup, transform: [{ translateY: geserY }, { rotate: putar }] },
-      ]}
+      style={[style, { width: ukuran, height: ukuran * 1.7, opacity: redup, transform: [{ translateY: geserY }, { rotate: putar }] }]}
     />
   );
 }
 
 export default function WelcomeScreen({ go }) {
   const [tahap, setTahap] = useState(0);
+  const { width, height } = useWindowDimensions();
   const pop = useRef(new Animated.Value(0)).current;
   const denyut = useRef(new Animated.Value(0)).current;
+
+  // Panggung rasio 4:3 sebesar mungkin tanpa terpotong.
+  const lebarPanggung = Math.min(width, (height * 4) / 3);
+  const tinggiPanggung = (lebarPanggung * 3) / 4;
+  const skala = lebarPanggung / 1440; // mockup 1440x1024
 
   useEffect(() => {
     pop.setValue(0);
@@ -60,81 +81,69 @@ export default function WelcomeScreen({ go }) {
     return () => animasi.stop();
   }, [denyut]);
 
-  const skalaPop = pop.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1] });
+  const skalaPop = pop.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] });
   const gayaPop = { opacity: pop, transform: [{ scale: skalaPop }] };
   const redupLanjut = denyut.interpolate({ inputRange: [0, 1], outputRange: [0.45, 1] });
+
+  const ukuranJudul = Math.max(20, 64 * skala);
+  const ukuranLanjut = Math.max(12, 26 * skala);
 
   if (tahap === 0) {
     return (
       <Pressable style={styles.layar} onPress={() => setTahap(1)} accessibilityLabel="Ketuk untuk lanjut">
-        <View style={styles.container}>
-          <BintangMelayang style={{ left: 26, top: 190 }} ukuran={48} delay={0} durasi={1700} />
-          <BintangMelayang style={{ right: 34, top: 150 }} ukuran={34} delay={450} durasi={2100} />
-          <BintangMelayang style={{ left: 54, bottom: 210 }} ukuran={28} delay={800} durasi={1900} />
-          <BintangMelayang style={{ right: 52, bottom: 250 }} ukuran={26} delay={300} durasi={2300} />
-          <Animated.View style={[styles.kontenTengah, gayaPop]}>
-            <Image source={require('../../assets/character-welcome.png')} style={styles.karakterAwal} resizeMode="contain" />
-            <Text style={styles.judul}>Apakah anda buta warna?</Text>
-            <Animated.Text style={[styles.lanjut, { opacity: redupLanjut }]}>Click anywhere to continue</Animated.Text>
-          </Animated.View>
-        </View>
+        <Animated.View style={[styles.panggung, { width: lebarPanggung, height: tinggiPanggung }, gayaPop]}>
+          <ExpoImage source={require('../../assets/welcome-stage-awal.png')} style={styles.frame} contentFit="cover" />
+          <Melayang style={[styles.stiker, { left: '23%', top: '11%', width: '19%' }]} delay={0} durasi={2100}>
+            <ExpoImage source={require('../../assets/chibi-tanya.webp')} style={styles.stikerGambar} contentFit="contain" />
+          </Melayang>
+          <Melayang style={[styles.stiker, { right: '4%', bottom: '7%', width: '17%' }]} delay={600} durasi={2400}>
+            <ExpoImage source={require('../../assets/chibi-kotak.png')} style={styles.stikerGambar} contentFit="contain" />
+          </Melayang>
+          <Bintang style={{ position: 'absolute', left: '41%', bottom: '22%' }} ukuran={Math.max(18, 70 * skala)} delay={300} durasi={1900} />
+          <Bintang style={{ position: 'absolute', right: '11%', top: '40%' }} ukuran={Math.max(16, 60 * skala)} delay={800} durasi={2200} />
+          <View style={[styles.blokTeks, { left: '38%', right: '3%', top: '47%' }]}>
+            <Text style={[styles.judul, { fontSize: ukuranJudul }]}>Apakah kamu buta warna??</Text>
+            <Animated.Text style={[styles.lanjut, { fontSize: ukuranLanjut, opacity: redupLanjut }]}>Click anywhere to continue</Animated.Text>
+          </View>
+        </Animated.View>
       </Pressable>
     );
   }
 
   return (
     <View style={styles.layar}>
-      <View style={styles.container}>
-        <TouchableOpacity style={styles.tombolKembali} onPress={() => setTahap(0)}>
-          <Text style={styles.tombolKembaliTeks}>← Kembali</Text>
-        </TouchableOpacity>
-        <BintangMelayang style={{ left: 28, top: 140 }} ukuran={40} delay={0} durasi={1800} />
-        <BintangMelayang style={{ right: 32, top: 110 }} ukuran={30} delay={500} durasi={2200} />
-        <BintangMelayang style={{ left: 50, bottom: 230 }} ukuran={26} delay={900} durasi={2000} />
-        <BintangMelayang style={{ right: 48, bottom: 260 }} ukuran={24} delay={350} durasi={2400} />
-        <Animated.View style={[styles.kontenTengah, gayaPop]}>
-          {/* Animasi karakter: 132 frame dari animation.json digabung jadi satu WebP animasi
-              (timing per frame persis sama). Diputar expo-image supaya jalan di HP dan web;
-              pemutar frame per gambar di HP kalah cepat decode-nya sehingga tampil kosong. */}
-          <ExpoImage source={require('../../assets/character-start.webp')} style={styles.karakterStart} contentFit="contain" autoplay />
-          <Text style={styles.judul}>Ayo tes bersama!</Text>
-          <TouchableOpacity style={styles.tombolStart} onPress={() => go('loading')}>
-            <Text style={styles.tombolStartTeks}>Start</Text>
-          </TouchableOpacity>
-        </Animated.View>
-        <View style={styles.bawah}>
-          <View style={styles.tautanRow}>
-            <TouchableOpacity onPress={() => go('home')}><Text style={styles.tautan}>Pelajari dulu</Text></TouchableOpacity>
-            <Text style={styles.pemisah}>•</Text>
-            <TouchableOpacity onPress={() => go('history')}><Text style={styles.tautan}>Riwayat</Text></TouchableOpacity>
-          </View>
-          <Text style={styles.disclaimer}>Skrining awal, bukan diagnosis medis.</Text>
+      <Animated.View style={[styles.panggung, { width: lebarPanggung, height: tinggiPanggung }, gayaPop]}>
+        <ExpoImage source={require('../../assets/welcome-stage-tes.png')} style={styles.frame} contentFit="cover" />
+        <Pressable style={styles.tombolKembali} onPress={() => setTahap(0)} accessibilityLabel="Kembali">
+          <Text style={[styles.tombolKembaliTeks, { fontSize: Math.max(11, 22 * skala) }]}>← Kembali</Text>
+        </Pressable>
+        <Bintang style={{ position: 'absolute', left: '50%', top: '38%' }} ukuran={Math.max(20, 80 * skala)} delay={0} durasi={1800} />
+        <Bintang style={{ position: 'absolute', right: '13%', bottom: '24%' }} ukuran={Math.max(16, 60 * skala)} delay={500} durasi={2100} />
+        <View style={[styles.blokTeks, { left: '40%', right: '24%', top: '50%' }]}>
+          <Text style={[styles.judul, { fontSize: ukuranJudul }]}>Mari kita tes!!!</Text>
         </View>
-      </View>
+        <Melayang style={[styles.stiker, { right: '5%', top: '40%', width: '18%' }]} delay={200} durasi={2000}>
+          <Pressable onPress={() => go('loading')} accessibilityLabel="Mulai tes">
+            <ExpoImage source={require('../../assets/chibi-tunjuk.webp')} style={styles.stikerGambar} contentFit="contain" />
+          </Pressable>
+        </Melayang>
+        <Melayang style={[styles.stiker, { left: '40%', bottom: '1%', width: '17%' }]} delay={700} durasi={2300}>
+          <ExpoImage source={require('../../assets/chibi-biru.webp')} style={styles.stikerGambar} contentFit="contain" />
+        </Melayang>
+      </Animated.View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  layar: { flex: 1, backgroundColor: '#fff', alignItems: 'center' },
-  container: { flex: 1, width: '100%', maxWidth: 480, position: 'relative' },
-  bintang: { position: 'absolute' },
-  kontenTengah: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 },
-  karakterAwal: { width: 240, height: 189, marginBottom: 20 },
-  karakterStart: { width: 260, height: 243, marginBottom: 16 },
-  judul: { fontSize: 28, fontWeight: 'bold', textAlign: 'center', color: '#111' },
-  lanjut: { fontSize: 15, color: '#555', textAlign: 'center', marginTop: 10 },
-  tombolKembali: { position: 'absolute', top: 12, left: 12, zIndex: 2, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 999, backgroundColor: '#eef2ff' },
-  tombolKembaliTeks: { color: '#1a73e8', fontWeight: 'bold', fontSize: 14 },
-  tombolStart: {
-    marginTop: 20, alignSelf: 'center', width: 200, paddingVertical: 16, borderRadius: 999,
-    backgroundColor: '#e63946', alignItems: 'center',
-    shadowColor: '#e63946', shadowOpacity: 0.35, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 6,
-  },
-  tombolStartTeks: { color: '#fff', fontWeight: 'bold', fontSize: 18 },
-  bawah: { position: 'absolute', left: 0, right: 0, bottom: 18, alignItems: 'center' },
-  tautanRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  tautan: { color: '#1a73e8', fontSize: 14 },
-  pemisah: { color: '#999' },
-  disclaimer: { fontSize: 12, color: '#888', marginTop: 8, textAlign: 'center' },
+  layar: { flex: 1, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
+  panggung: { position: 'relative', backgroundColor: '#fff', overflow: 'hidden' },
+  frame: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 },
+  stiker: { position: 'absolute', aspectRatio: 1 },
+  stikerGambar: { width: '100%', height: '100%' },
+  blokTeks: { position: 'absolute', alignItems: 'center' },
+  judul: { fontFamily: SERIF, color: MERAH_TEKS, textAlign: 'center' },
+  lanjut: { fontFamily: SERIF, color: '#111', textAlign: 'center', marginTop: 10 },
+  tombolKembali: { position: 'absolute', top: '2%', right: '2%', zIndex: 2, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.85)' },
+  tombolKembaliTeks: { color: '#1a73e8', fontWeight: 'bold' },
 });

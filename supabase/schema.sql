@@ -90,21 +90,41 @@ alter table detail_jawaban enable row level security;
 
 -- Policy ditulis eksplisit per tabel (tanpa DO / FOREACH) supaya
 -- jalan di SQL Editor Supabase tanpa error syntax 42601.
+-- Policy diketatkan untuk situs publik: basis pengetahuan hanya bisa
+-- dibaca lewat API (seed di bawah berjalan sebagai pemilik database di
+-- SQL Editor, jadi tidak terpengaruh), riwayat hanya bisa dibaca,
+-- ditambah, dan dihapus. Lihat juga ketatkan-rls.sql untuk database
+-- yang sudah terlanjur memakai policy anon_all.
 drop policy if exists "anon_all" on jenis_buta_warna;
-create policy "anon_all" on jenis_buta_warna for all to anon, authenticated using (true) with check (true);
+drop policy if exists "anon_select" on jenis_buta_warna;
+create policy "anon_select" on jenis_buta_warna for select to anon, authenticated using (true);
 drop policy if exists "anon_all" on gejala;
-create policy "anon_all" on gejala for all to anon, authenticated using (true) with check (true);
+drop policy if exists "anon_select" on gejala;
+create policy "anon_select" on gejala for select to anon, authenticated using (true);
 drop policy if exists "anon_all" on plat_ishihara;
-create policy "anon_all" on plat_ishihara for all to anon, authenticated using (true) with check (true);
+drop policy if exists "anon_select" on plat_ishihara;
+create policy "anon_select" on plat_ishihara for select to anon, authenticated using (true);
 drop policy if exists "anon_all" on aturan;
-create policy "anon_all" on aturan for all to anon, authenticated using (true) with check (true);
+drop policy if exists "anon_select" on aturan;
+create policy "anon_select" on aturan for select to anon, authenticated using (true);
 drop policy if exists "anon_all" on riwayat_konsultasi;
-create policy "anon_all" on riwayat_konsultasi for all to anon, authenticated using (true) with check (true);
+drop policy if exists "anon_select" on riwayat_konsultasi;
+create policy "anon_select" on riwayat_konsultasi for select to anon, authenticated using (true);
+drop policy if exists "anon_insert" on riwayat_konsultasi;
+create policy "anon_insert" on riwayat_konsultasi for insert to anon, authenticated with check (true);
+drop policy if exists "anon_delete" on riwayat_konsultasi;
+create policy "anon_delete" on riwayat_konsultasi for delete to anon, authenticated using (true);
 drop policy if exists "anon_all" on detail_jawaban;
-create policy "anon_all" on detail_jawaban for all to anon, authenticated using (true) with check (true);
+drop policy if exists "anon_select" on detail_jawaban;
+create policy "anon_select" on detail_jawaban for select to anon, authenticated using (true);
+drop policy if exists "anon_insert" on detail_jawaban;
+create policy "anon_insert" on detail_jawaban for insert to anon, authenticated with check (true);
+drop policy if exists "anon_delete" on detail_jawaban;
+create policy "anon_delete" on detail_jawaban for delete to anon, authenticated using (true);
 
 -- Hak akses tabel untuk peran API (anon/authenticated).
-grant select, insert, update, delete on jenis_buta_warna, gejala, plat_ishihara, aturan, riwayat_konsultasi, detail_jawaban to anon, authenticated;
+grant select on jenis_buta_warna, gejala, plat_ishihara, aturan to anon, authenticated;
+grant select, insert, delete on riwayat_konsultasi, detail_jawaban to anon, authenticated;
 grant usage, select on all sequences in schema public to anon, authenticated;
 
 -- ===================== SEED: JENIS (8) =====================
