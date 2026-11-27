@@ -52,7 +52,7 @@ export default function App() {
   const keBeranda = () => setTumpukan(['welcome']);
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, (layar === 'welcome' || layar === 'loading') && styles.rootPenuh]}>
       <StatusBar style="auto" />
       {layar !== 'welcome' && layar !== 'loading' && (
         <View style={styles.header}>
@@ -93,6 +93,7 @@ export default function App() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#fff', paddingTop: 40 },
+  rootPenuh: { paddingTop: 0 },
   isi: { flex: 1 },
   tengah: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 },
   judul: { fontSize: 20, fontWeight: 'bold', marginBottom: 8 },
