@@ -87,13 +87,14 @@ export default function WelcomeScreen({ go }) {
   const gayaPop = { opacity: pop, transform: [{ scale: skalaPop }] };
   const redupLanjut = denyut.interpolate({ inputRange: [0, 1], outputRange: [0.45, 1] });
 
-  // Portrait: frame setinggi layar, lebar mengikuti rasio 4:3, digeser
-  // sedikit ke kiri supaya wajah karakter di tepi kiri seperti mockup HP.
+  // Portrait: frame diperbesar secukupnya (lebar 1,85x layar, setinggi
+  // layar) dan digeser ke kiri, supaya karakter tidak kegedean dan teks
+  // di kanan tetap bersih seperti mockup HP.
   // Landscape: frame memenuhi layar penuh (fill) tanpa gap putih.
   const gayaFrame = portrait
-    ? { position: 'absolute', left: -width * 0.28, top: 0, width: (height * 4) / 3, height }
+    ? { position: 'absolute', left: -width * 0.17, top: 0, width: width * 1.85, height }
     : styles.frame;
-  const isiFrame = portrait ? 'cover' : 'fill';
+  const isiFrame = 'fill';
 
   if (tahap === 0) {
     return (
@@ -101,14 +102,14 @@ export default function WelcomeScreen({ go }) {
         <Animated.View style={[styles.panggung, gayaPop]}>
           <ExpoImage source={require('../../assets/welcome-stage-awal.png')} style={gayaFrame} contentFit={isiFrame} />
           <Melayang
-            style={[styles.stiker, portrait ? { left: '28%', top: '12%', width: '22%' } : { left: '24%', top: '13%', width: '16%' }]}
+            style={[styles.stiker, portrait ? { left: '28%', top: '12%', width: width * 0.22 } : { left: '24%', top: '13%', width: 230 * skala }]}
             delay={0}
             durasi={2100}
           >
             <ExpoImage source={require('../../assets/chibi-tanya.webp')} style={styles.stikerGambar} contentFit="contain" />
           </Melayang>
           <Melayang
-            style={[styles.stiker, portrait ? { right: '3%', bottom: '4%', width: '22%' } : { right: '7%', bottom: '8%', width: '17%' }]}
+            style={[styles.stiker, portrait ? { right: '3%', bottom: '4%', width: width * 0.22 } : { right: '7%', bottom: '7%', width: 240 * skala }]}
             delay={600}
             durasi={2400}
           >
@@ -143,9 +144,6 @@ export default function WelcomeScreen({ go }) {
     <View style={styles.layar}>
       <Animated.View style={[styles.panggung, gayaPop]}>
         <ExpoImage source={require('../../assets/welcome-stage-tes.png')} style={gayaFrame} contentFit={isiFrame} />
-        <Pressable style={styles.tombolKembali} onPress={() => setTahap(0)} accessibilityLabel="Kembali">
-          <Text style={[styles.tombolKembaliTeks, { fontSize: Math.max(11, 22 * skala) }]}>← Kembali</Text>
-        </Pressable>
         <Bintang
           style={{ position: 'absolute', ...(portrait ? { left: '46%', top: '40%' } : { left: '50%', top: '36%' }) }}
           ukuran={portrait ? Math.max(24, width * 0.09) : Math.max(20, 80 * skala)}
@@ -162,7 +160,7 @@ export default function WelcomeScreen({ go }) {
           <Text style={[styles.judul, { fontSize: ukuranJudul, textAlign: portrait ? 'left' : 'center' }]}>Mari kita tes!!!</Text>
         </View>
         <Melayang
-          style={[styles.stiker, portrait ? { right: '5%', top: '46%', width: '23%' } : { right: '7%', top: '42%', width: '14%' }]}
+          style={[styles.stiker, portrait ? { right: '5%', top: '46%', width: width * 0.23 } : { right: '7%', top: '44%', width: 190 * skala }]}
           delay={200}
           durasi={2000}
         >
@@ -171,7 +169,7 @@ export default function WelcomeScreen({ go }) {
           </Pressable>
         </Melayang>
         <Melayang
-          style={[styles.stiker, portrait ? { left: '57%', bottom: '6%', width: '22%' } : { left: '41%', bottom: '5%', width: '13%' }]}
+          style={[styles.stiker, portrait ? { left: '57%', bottom: '6%', width: width * 0.22 } : { left: '41%', bottom: '4%', width: 170 * skala }]}
           delay={700}
           durasi={2300}
         >
